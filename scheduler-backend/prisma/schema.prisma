@@ -15,7 +15,7 @@ model Task {
   title       String
   estimate    Int      // minutes
   deadline    DateTime?
-  tags        Json
+  tags        String   // Changed from Json to String for SQLite
   dependsOn   String?  // another Task.id
   chunks      Chunk[]
   createdAt   DateTime @default(now())
@@ -36,5 +36,5 @@ model Chunk {
 model RunHistory {
   id         String   @id @default(cuid())
   timestamp  DateTime @default(now())
-  details    Json     // store schedule or diff
+  details    String   // Changed from Json to String for SQLite
 }

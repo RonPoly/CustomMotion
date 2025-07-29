@@ -7,20 +7,45 @@ const router = Router();
 router.post("/", async (req, res) => {
   try {
     const { title, estimate, deadline, tags, dependsOn } = req.body;
+    
     const task = await prisma.task.create({
-      data: { title, estimate, deadline, tags: tags || {}, dependsOn: dependsOn || null }
+      data: { 
+        title, 
+        estimate, 
+        deadline: deadline ? new Date(deadline) : null,
+        tags: JSON.stringify(tags || {}), // Convert to string for SQLite
+        dependsOn: dependsOn || null 
+      }
     });
-    res.json(task);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create task" });
+    
+    res.json({
+      ...task,
+      tags: JSON.parse(task.tags) // Parse back to object for response
+    });
+  } catch (err: any) {
+    console.error("Task creation error:", err);
+    res.status(500).json({ error: "Failed to create task", details: err.message });
   }
 });
 
 // List all tasks
 router.get("/", async (_req, res) => {
-  const tasks = await prisma.task.findMany();
-  res.json(tasks);
+  try {
+    const tasks = await prisma.task.findMany({
+      include: { chunks: true }
+    });
+    
+    // Parse tags back to objects
+    const tasksWithParsedTags = tasks.map(t => ({
+      ...t,
+      tags: JSON.parse(t.tags)
+    }));
+    
+    res.json(tasksWithParsedTags);
+  } catch (err: any) {
+    console.error("Task fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch tasks", details: err.message });
+  }
 });
 
 export default router;

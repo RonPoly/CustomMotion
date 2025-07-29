@@ -1,54 +1,58 @@
-﻿// src/index.ts
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import { prisma } from "./prismaClient";
-import chunkRouter from "./routes/chunk";
-import tasksRouter from "./routes/tasks";
-
 dotenv.config();
+
 const app = express();
-
-// ◾️ GLOBAL REQUEST LOGGER
-app.use((req, _res, next) => {
-  console.log(`➡️ Incoming request: ${req.method} ${req.url}`);
-  next();
-});
-
-app.use(cors(), express.json());
-app.use("/chunk", chunkRouter);
-app.use("/tasks", tasksRouter);
-
-app.get("/", (_req, res) => res.send("Backend up and running"));
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
-  // ...testDb...
+
+// Start with minimal setup
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (_req, res) => {
+  res.json({ message: "Backend is running!" });
 });
 
+// Basic server start
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log('Press Ctrl+C to stop\n');
+  
+  // Now try to import routes after server starts
+  setTimeout(() => {
+    console.log('Loading routes...');
+    try {
+      const { prisma } = require("./prismaClient");
+      const chunkRouter = require("./routes/chunk").default;
+      const tasksRouter = require("./routes/tasks").default;
+      
+      app.use("/chunk", chunkRouter);
+      app.use("/tasks", tasksRouter);
+      
+      console.log('✅ Routes loaded successfully');
+      
+      // Test DB connection
+      prisma.$connect().then(() => {
+        console.log('✅ Database connected');
+      }).catch((e: any) => {
+        console.error('❌ Database error:', e.message);
+      });
+      
+    } catch (e: any) {
+      console.error('Error loading routes:', e.message);
+    }
+  }, 1000);
+});
 
-// A simple test route
-app.get("/", (_req, res) => res.send("Backend up and running"));
+// Keep process alive
+process.stdin.resume();
 
-// After server starts, test the database
-async function testDb() {
-  try {
-    const t = await prisma.task.create({
-      data: {
-        title: "Hello Prisma",
-        estimate: 30,
-        tags: {}
-      }
-    });
-    console.log("Created test task:", t);
-  } catch (e) {
-    console.error("DB test failed:", e);
-  }
-}
-
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
-  testDb();  // <<< call it here
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down...');
+  server.close(() => {
+    process.exit(0);
+  });
 });
