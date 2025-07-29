@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  estimate    Int      // minutes
+  deadline    DateTime?
+  tags        Json
+  dependsOn   String?  // another Task.id
+  chunks      Chunk[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Chunk {
+  id          String   @id @default(cuid())
+  task        Task     @relation(fields: [taskId], references: [id])
+  taskId      String
+  title       String
+  duration    Int      // minutes
+  scheduledAt DateTime?
+  calendarEventId String? // to map back to Google event
+  createdAt   DateTime @default(now())
+}
+
+model RunHistory {
+  id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
+  details    Json     // store schedule or diff
+}
