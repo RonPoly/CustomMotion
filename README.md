@@ -1,8 +1,4 @@
 # CustomMotion
-Thanks – since you'll be pasting AI-generated code and working with Claude/Codex, I’ll now walk you through step-by-step exactly how to build the unified AI-driven scheduler from scratch. I’ll structure the instructions to ensure each step bootstraps cleanly into the next, using Codex for scaffolding and Claude for intelligent functionality. This will include setup, commands to run, prompts to paste, and dependencies to install.
-
-I’ll get started and let you know once the build guide is ready.
-
 
 # Building a Unified AI-Driven Scheduler: Step-by-Step Guide
 
